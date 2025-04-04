@@ -16,8 +16,7 @@ from pytest import fixture, mark, raises
 
 from semantic_kernel.connectors.memory.pinecone import PineconeStore
 from semantic_kernel.connectors.memory.pinecone._pinecone import PineconeCollection
-from semantic_kernel.data.vector_search.vector_search_filter import VectorSearchFilter
-from semantic_kernel.data.vector_search.vector_search_options import VectorSearchOptions
+from semantic_kernel.data.vector_search import VectorSearchFilter, VectorSearchOptions
 from semantic_kernel.exceptions.vector_store_exceptions import VectorStoreInitializationException
 
 BASE_PATH_ASYNCIO = "pinecone.PineconeAsyncio"
@@ -168,7 +167,7 @@ async def test_load_index_client(collection, mock_index_asyncio):
     assert collection.index is not None
     assert collection.index_client is not None
     assert isinstance(collection.index_client, _IndexAsyncio)
-    assert collection._integrated_embeddings is (collection.index.embed is not None)
+    assert collection.embed_settings == collection.index.embed
 
 
 async def test_create_collection(collection, mock_create_index):
@@ -312,10 +311,7 @@ async def test_search(collection):
 
 @mark.parametrize("embed", [{"model": "test-model"}])
 async def test_search_embed(collection):
-    record = {
-        "id": "test_id",
-        "content": "test_content",
-    }
+    record = {"id": "test_id", "content": "test_content", "vector": None}
     query_response = SearchRecordsResponse._from_openapi_data(
         result=SearchRecordsResponseResult._from_openapi_data(**{
             "hits": [
